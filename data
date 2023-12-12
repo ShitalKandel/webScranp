@@ -1,0 +1,43 @@
+import requests
+from bs4 import BeautifulSoup
+import pandas as pd
+
+response = requests.get('https://www.jobsnepal.com/')
+response = response.content
+soup = BeautifulSoup(response, 'html.parser')
+
+# Job option
+itJob = soup.find_all('div', class_='col-sm-6 col-md-6 col-lg-4 mb-3')
+title_tags = soup.find_all('h2', class_='job-title')
+location_tags = soup.find_all('span', class_='location')
+
+a_tag_response = requests.get('https://www.jobsnepal.com/country-director-131259')
+a_tag_response = a_tag_response.content
+a_soup = BeautifulSoup(a_tag_response, 'html.parser')
+
+span_posted = a_soup.find('span', class_='job-posted-on')
+span_deadlines = a_soup.find('span', class_='apply-deadlines')
+
+
+def dcp():
+    description = []
+
+    for ttl, lct in zip(title_tags, location_tags):
+        title = ttl.text.strip()
+        location = lct.text.strip()
+        posted_on = span_posted.text.strip()
+        deadline = span_deadlines.text.strip()
+        description.append({'title': title, 'location': location, 'Posted_On': posted_on, 'Deadline': deadline})
+
+    return description
+
+
+data = dcp()
+
+# Create a Pandas DataFrame
+df = pd.DataFrame(data)
+
+# Save the DataFrame to an Excel file
+df.to_excel('job_data.xlsx', index=False)
+
+print("Data exported to job_data.xlsx")
