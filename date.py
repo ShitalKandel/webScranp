@@ -1,8 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
 import csv
-import smtplib
-
 
 url = 'https://www.jobsnepal.com/'
 
@@ -13,13 +11,10 @@ def get_links(url):
         title_tags = soup.find_all('h2', class_='job-title')
         location_tags = soup.find_all('span', class_='location')
         links = soup.find_all('a', href=True)
-
         return title_tags, location_tags, links
     else:
-        print(f"Error: Unable to fetch:{response.status_code}")
+        print(f"Error: Unable to fetch: {response.status_code}")
         return None, None, None
-
-title_tags, location_tags, links = get_links(url)
 
 def get_job_details(job_url):
     job_resp = requests.get(job_url)
@@ -29,16 +24,17 @@ def get_job_details(job_url):
         deadline_tag = job_soup.find('span', class_='apply-deadline')
 
         if job_open_on_tag and deadline_tag:
-            job_open_on = job_open_on_tag.text.strip()
-            deadline = deadline_tag.text.strip()
+            job_open_on = job_open_on_tag.text.strip()[3:]
+            deadline = deadline_tag.text.strip()[3:]
             return job_open_on, deadline
         else:
-            return None, None
-    
+            return None, None 
 
 def job_dcp():
     description = []
     processed_urls = set()
+
+    title_tags, location_tags, links = get_links(url)
 
     for title_tag, location_tag, link in zip(title_tags, location_tags, links):
         title = title_tag.text.strip()
@@ -46,10 +42,14 @@ def job_dcp():
         job_detail_url = link['href']
 
         if job_detail_url.startswith('http') and job_detail_url not in processed_urls:
-            job_open_on, deadline = get_job_details(job_detail_url)
+            job_open, deadline_job = get_job_details(job_detail_url)
 
-            if job_open_on and deadline:
-                values = {'title': title, 'location': location, 'Posted_On': job_open_on, 'Deadline': deadline}
+            if job_open and deadline_job:
+                # Strip and join strings from index 3
+                job_open = ' '.join(job_open.split()[2:])
+                deadline_job = ' '.join(deadline_job.split()[2:])
+                
+                values = {'title': title, 'location': location, 'Posted_On': job_open, 'Deadline': deadline_job}
                 description.append(values)
                 processed_urls.add(job_detail_url)
             else:
@@ -63,7 +63,7 @@ data = job_dcp()
 
 csv_file_path = 'job_data1.csv'
 
-with open(csv_file_path, 'a', newline='', encoding='utf-8') as csv_file:
+with open(csv_file_path, 'w', newline='', encoding='utf-8') as csv_file:
     fieldnames = ['title', 'location', 'Posted_On', 'Deadline']
     writer = csv.DictWriter(csv_file, fieldnames=fieldnames)
 
@@ -74,6 +74,3 @@ with open(csv_file_path, 'a', newline='', encoding='utf-8') as csv_file:
         writer.writerow(row)
 
 print(f'Data has been saved to {csv_file_path}')
-
-
-# smptlib = smptlib.conne
