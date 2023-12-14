@@ -38,7 +38,7 @@ def get_job_details(job_url):
             return None, None
 
 
-def job_dcp():
+def job_dcp(url):
     description = []
     processed_urls = set()
 
