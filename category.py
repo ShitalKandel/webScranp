@@ -1,8 +1,9 @@
 import requests
 from bs4 import BeautifulSoup
+from urllib.parse import urljoin
 import webbrowser
 
-url2 = "https://www.jobsnepal.com/category"
+url = "https://www.jobsnepal.com/category"
 
 def job_category(url):
     resp = requests.get(url)
@@ -46,14 +47,28 @@ def links(url):
             print(f"\nSelected Job Category: {selected_category}")
             print(f"Opening link: {selected_link}")
             
-            
-            webbrowser.open(selected_link)
-            title = soup.find_all('p',class_ = 'mb-0')
-            location = soup.find_all('div', class_="d-flex align-items-center pl-1 pr-1 py-1").text
-            
-
+            join_job_category = urljoin(url,selected_link)
+        #need to open links to fetch the data
+            # webbrowser.open(selected_link)
+            res = requests.get(selected_link)
+            if res.status_code == 200 :
+                soup2 = BeautifulSoup(res.text,'html.parser')
+                title_tags = soup2.find_all('h2',title = 'Digital Branding Intern')
+                location_tags = soup2.find_all('div', class_="d-flex align-items-center pr-1 pu-1").get_text
+                div_tags = soup2.find_all("div",class_='card-body')
+                links = [
+                    div.find('a')['href'] if div.find_all('a')else None for div in div_tags]
+                return join_job_category,title_tags,location_tags,links
+            else: 
+                print(f"Error: Unable to fetch:{r.status_code}")
         else:
             print("Invalid index. Please enter a valid index.")
 
+
+
+def job_dcp(url):
+    pass
+
+links(url)
 # Call the function to start the process
-links(url2)
+

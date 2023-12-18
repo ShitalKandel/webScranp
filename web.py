@@ -78,7 +78,7 @@ def job_dcp(url):
     return description
 
 
-data = job_dcp()
+data = job_dcp(url)
 
 csv_file_path = "dec 14.csv"
 
@@ -93,3 +93,5 @@ with open(csv_file_path, "a", newline="", encoding="utf-8") as csv_file:
         writer.writerow(row)
 
 print(f"Data has been saved to {csv_file_path}")
+
+ 
