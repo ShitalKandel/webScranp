@@ -46,12 +46,22 @@ em.attach(MIMEText(body, 'plain'))
 with open(csv_file_path, 'r') as file:
     em.attach(MIMEApplication(file.read(), Name='dec_14.csv'))
 
+# Create a secure SSL context for the email server connection
 context = ssl.create_default_context()
 
+
 try:
+
+    #we use host,port from where we want to sent our email
     with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtpObj:
+
+        #login to email server with user email , application password
         smtpObj.login(sender_email, sender_app_password)
+
+        #assigning sender, receiver, and body of email as string format
         smtpObj.sendmail(sender_email, receiver_email, em.as_string())
+
         print("Email sent successfully!")
+#make an exception if an erorr occurs during sending error
 except Exception as e:
     print(f"An error occurred: {e}")

@@ -7,7 +7,7 @@ from urllib.parse import urljoin
 url = "https://www.jobsnepal.com/category"
 
 
-def job_category(url:str|None) -> list|None :
+def job_category(url:str|None) -> list|None :#using typing method to make  code more readable
 
     """
     resp requests url which is in string format
