@@ -63,6 +63,14 @@ try:
         smtpObj.sendmail(sender_email, receiver_email, em.as_string())
         print("Email sent successfully!")
 
+
+
+except smtplib.SMTPRecipientsRefused as e:
+    print(f"Error: {e}")
+    print(f"The recipient's email address '{receiver_email}' is invalid.")
+
+
+
 #make an exception if an erorr occurs during sending error
 except Exception as e:
     print(f"An error occurred: {e}")

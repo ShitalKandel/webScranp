@@ -2,6 +2,8 @@ import requests
 from bs4 import BeautifulSoup
 import csv
 from urllib.parse import urljoin
+import email_automation_with_csv
+
 
 
 url = "https://www.jobsnepal.com/"
@@ -92,6 +94,11 @@ with open(csv_file_path, "a", newline="", encoding="utf-8") as csv_file:
     for row in data:
         writer.writerow(row)
 
-print(f"Data has been saved to {csv_file_path}")
 
- 
+# print(f"Data has been saved to {csv_file_path}")
+        
+print(email_automation_with_csv)
+
+
+
+
