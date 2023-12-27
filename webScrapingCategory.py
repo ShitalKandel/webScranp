@@ -4,6 +4,7 @@ import csv
 from urllib.parse import urljoin
 
 
+
 url = "https://www.jobsnepal.com/category"
 
 
@@ -19,7 +20,7 @@ def job_category(url:str|None) -> list|None :#using typing method to make  code 
     cate = []
 
     if resp.status_code == 200:
-        soup = BeautifulSoup(resp.text, "html.parser")
+        soup = BeautifulSoup(resp.text, "html.parser")                                                  
 
         categories = soup.find_all('a', class_='jobs-category', limit=8)
         for i in categories:
@@ -40,8 +41,6 @@ def job_category(url:str|None) -> list|None :#using typing method to make  code 
 
         return li
     return None
-
-
 
 
 def job_category_links(url):
@@ -83,6 +82,7 @@ def job_category_links(url):
             join_job_category = urljoin(url, selected_link)
 
             job_details = fetch_job_details(join_job_category)
+            
             return job_details
         
         else:
@@ -256,5 +256,5 @@ with open(csv_file_path, "a", newline="", encoding="utf-8") as csv_file:
 
     for row in data:
         writer.writerow(row)
-
-print(f"Data has been saved to {csv_file_path}")
+    print(f"Data has been saved to {csv_file_path}")
+    # print(email_automation_html_format)

@@ -36,7 +36,7 @@ Dear sir/mam,
     I hope this email finds you well. It is to notify that my email 
     automation task has been completed.
 '''
-a = pd.read_csv('dec 14.csv')#reading csv file using pandas module
+a = pd.read_csv('dec_19.csv')#reading csv file using pandas module
 html_table = a.to_html(index=False)#formating pandas module in html 
 
 # Creating MIME object for email
