@@ -1,43 +1,50 @@
 import smtplib
-from email.mime.multipart import MIMEMultipart
+import csv
 from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
-import ssl
 
-sender_email = 'lewishacker4@gmail.com'
-receiver_email = input('Enter your gmail:')
-sender_app_password = 'faixvssubgtmipvk'
+sender_email = "lewishacker4@gmail.com"
 
-subject = "Check if this mail is useful."
-body = '''
-Dear sir/mam,
-
-    I hope this email finds you well. It is to notify that my email 
-    automation task has been completed.
-'''
-
-def automation(em,sender_email, sender_app_password, receiver_email, csv_file_path):
-    em['From'] = sender_email
-    em['To'] = receiver_email
-    em['Subject'] = subject
-    em.attach(MIMEText(body, 'plain'))
+sender_password = "faixvssubgtmipvk"
+smtp_server = "smtp.gmail.com"
+smtp_port = 587
 
 
-    with open(csv_file_path, 'r') as file:
-        em.attach(MIMEApplication(file.read(),Name = csv_file_path))
+with open('receivers.csv', 'r') as file:
+    reader = csv.reader(file)
+    next(reader)  
+    receivers = [row[0] for row in reader]
 
-    
-    context = ssl.create_default_context()
 
-    try:
+subject = "Subject of your email"
+body = "Body of your email"
+
+def automation(sender_email,sender_password,receivers):
+    for receiver_email in receivers:
+
+        message = MIMEMultipart()
+        message['From'] = sender_email
+        message['To'] = receiver_email
+        message['Subject'] = subject
+
         
-        with smtplib.SMTP_SSL('smtp.gmail.com', 465, context=context) as smtpObj:
-    
-            smtpObj.login(sender_email, sender_app_password)
-        
-            smtpObj.sendmail(sender_email, receiver_email, em.as_string())
-            print("Email sent successfully!")
-    
-    except Exception as e:
-        print(f"An error occurred: {e}")
+        csv_attachment = MIMEApplication(open('dec_21.csv', 'rb').read())
+        csv_attachment.add_header('Content-Disposition', 'attachment', filename='dec_21.csv')
+        message.attach(csv_attachment)
 
+        message.attach(MIMEText(body, 'plain'))
+
+        try:
+
+            with smtplib.SMTP(smtp_server, smtp_port) as server:
+                server.starttls()
+                server.login(sender_email, sender_password)
+                server.sendmail(sender_email, receiver_email, message.as_string())
+            print(f"Email sent successfully to {receiver_email}")
+        except smtplib.SMTPAuthenticationError as e:
+            print(f"Failed to send email to {receiver_email}. Authentication error: {e}")
+        except Exception as e:
+            print(f"An error occurred while sending email to {receiver_email}: {e}")
+
+    print("Email sending process completed.")

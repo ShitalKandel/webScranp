@@ -1,9 +1,11 @@
 import requests
 from bs4 import BeautifulSoup
+import os
 import csv
+from datetime import datetime
 from urllib.parse import urljoin
 from email.mime.multipart import MIMEMultipart
-from email_automation_with_csv import automation,sender_email,sender_app_password,receiver_email
+from email_automation_with_csv import automation,sender_email,sender_password,receivers
 
 class JobScraper:
     def __init__(self, base_url, csv_file_path):
@@ -88,17 +90,41 @@ class ScrapFile:
             for row in data:
                 writer.writerow(row)
 
+def create_csv_file(csv_file_path):
+    timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+    new_csv_file_path = f"job_{timestamp}.csv"
+    with open(new_csv_file_path, "w", newline="", encoding="utf-8") as new_csv_file:
+        fieldnames = ["title", "location", "Posted_On", "Deadline"]
+        writer = csv.DictWriter(new_csv_file, fieldnames=fieldnames)
+        writer.writeheader()
+    return new_csv_file_path
 
 if __name__ == "__main__":
     base_url = "https://www.jobsnepal.com/"
-    csv_file_path = input("Enter a csv file name: ")
 
-    job_scraper = JobScraper(base_url, csv_file_path)
-    scrap_file = ScrapFile(csv_file_path)
-    job_data = job_scraper.scrape_jobs()
+    while True:
+        csv_file_path = input("Enter a csv file name: ")
 
-    scrap_file.write_to_csv(job_data)
+        if os.path.exists(csv_file_path):
+            job_scraper = JobScraper(base_url, csv_file_path)
+            scrap_file = ScrapFile(csv_file_path)
+        else:
+            print(f"CSV file not found: {csv_file_path}")
+            create_new_file = input("Do you want to create a new CSV file? (yes/no): ").lower() == "yes"
+            if create_new_file:
+                csv_file_path = create_csv_file(csv_file_path)
+                job_scraper = JobScraper(base_url, csv_file_path)
+                scrap_file = ScrapFile(csv_file_path)
+            else:
+                print("Exiting program.")
+                break
 
-    em = MIMEMultipart()
-    automation(em, sender_email, sender_app_password, receiver_email, csv_file_path)
+        job_data = job_scraper.scrape_jobs()
+        scrap_file.write_to_csv(job_data)
 
+        add_another_csv = input("Do you want to add another CSV file? (yes/no): ").lower() == "yes"
+        if not add_another_csv:
+            em = MIMEMultipart()
+            automation(sender_email, sender_password, receivers)
+            print("Successfully sent email.")
+            break
