@@ -5,16 +5,13 @@ from email.mime.multipart import MIMEMultipart
 from email_automation_with_csv import automation, sender_email, sender_password, receivers
 from urllib.parse import urljoin
 import requests
-import base64
 from bs4 import BeautifulSoup
-
 
 base_url = "https://www.jobsnepal.com/"
 
 headers = {
      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/58.0.3029.110 Safari/537.3',
      'Accept-Language': 'en-US,en;q=0.9',
-    #  'Accept-Encoding': 'gzip, deflate, br',
      'Connection': 'keep-alive'
 }
 
@@ -26,21 +23,21 @@ class JobScraper:
     def get_tags(self, url):
         response = requests.get(url, headers=headers)
         if response.status_code == 200:
-            soup = BeautifulSoup(response.text,"html.parser")
+            soup = BeautifulSoup(response.text, "html.parser")
 
-            title_tags = soup.find("h2", class_="job-title") 
-            location_tags = soup.find("span", class_="location") 
-            # div_tags = soup.find("h2", class_="job-title") 
+            title_tags = soup.find_all("h2", class_="job-title")
+            title_text = [title.text.strip() for title in title_tags]
+
+            location_tags = soup.find_all("span", class_="location")
+            location_text = [location.text.strip() for location in location_tags]
 
             div_tags = soup.find_all("div", class_="col-sm-6 col-md-6 col-lg-4 mb-3")
-
             links = [urljoin(self.base_url, div.find("a")["href"]) if div.find("a") else None for div in div_tags]
 
-            return title_tags, location_tags, links
+            return title_text, location_text, links
         else:
             print(f"Error: Unable to fetch: {response.status_code}")
             return None, None, None
-
 
     def get_job_details(self, job_url):
         job_resp = requests.get(job_url)
@@ -68,8 +65,8 @@ class JobScraper:
         title_tags, location_tags, links = tags
 
         for title_tag, location_tag, link in zip(title_tags, location_tags, links):
-            title = title_tag.text.strip()
-            location = location_tag.text.strip()
+            title = title_tag
+            location = location_tag
             job_detail_url = link
 
             if job_detail_url and job_detail_url not in self.processed_urls:
@@ -85,10 +82,9 @@ class JobScraper:
                     descriptions.append(values)
                     self.processed_urls.add(job_detail_url)
                 else:
-                    print(f"Skipping job_detail_url without details: {job_detail_url}")
+                    print(f"job_detail_url lists: {job_detail_url}")
 
         return descriptions
-
 
 class ScrapFile:
     @staticmethod
@@ -107,10 +103,15 @@ class ScrapFile:
 
     @staticmethod
     def write_to_csv(data, csv_file_path):
+        if not os.path.exists(csv_file_path):
+            with open(csv_file_path, "w", newline="", encoding="utf-8") as new_csv_file:
+                fieldnames = ["title", "location", "Posted_On", "Deadline"]
+                writer = csv.DictWriter(new_csv_file, fieldnames=fieldnames)
+                writer.writeheader()
+
         with open(csv_file_path, "a", newline="", encoding="utf-8") as existing_file:
             writer = csv.DictWriter(existing_file, fieldnames=["title", "location", "Posted_On", "Deadline"])
             writer.writerows(data)
-
 
 class JobManager:
     def __init__(self, base_url):
@@ -143,15 +144,14 @@ class JobManager:
             ScrapFile.write_to_csv(job_data, csv_file_path)
             self.compare_and_update(job_data, csv_file_path)
             self.log_job_scraps(job_data)
+            
+            # Sending email
             em = MIMEMultipart()
             automation(sender_email, sender_password, receivers)
             print("Successfully sent email.")
         else:
             print("No job data scraped.")
-        
-
 
 if __name__ == "__main__":
-    
     job_manager = JobManager(base_url)
     job_manager.run()
