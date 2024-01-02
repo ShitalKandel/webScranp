@@ -3,7 +3,7 @@ from bs4 import BeautifulSoup
 import csv
 from urllib.parse import urljoin
 from email.mime.multipart import MIMEMultipart
-from email_automation_with_csv import automation,sender_email,sender_app_password,receiver_email
+from email_automation_with_csv import automation,sender_email,sender_password,receivers
 
 class JobScraper:
     def __init__(self, base_url, csv_file_path):
@@ -100,5 +100,5 @@ if __name__ == "__main__":
     scrap_file.write_to_csv(job_data)
 
     em = MIMEMultipart()
-    automation(em, sender_email, sender_app_password, receiver_email, csv_file_path)
+    automation(sender_email,sender_password,receivers, csv_file_path)
 

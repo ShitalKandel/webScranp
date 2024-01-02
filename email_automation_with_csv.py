@@ -17,8 +17,13 @@ with open('receivers.csv', 'r') as file:
     receivers = [row[0] for row in reader]
 
 
-subject = "Subject of your email"
-body = "Body of your email"
+subject = "Check if this mail is useful."
+body = '''
+Dear sir/mam,
+
+    I hope this email finds you well. It is to notify that my email 
+    automation task has been completed.
+'''
 
 def automation(sender_email,sender_password,receivers):
     for receiver_email in receivers:
