@@ -34,7 +34,7 @@ def automation(sender_email,sender_password,receivers):
         message['Subject'] = subject
 
         
-        csv_attachment = MIMEApplication(open('dec_21.csv', 'rb').read())
+        csv_attachment = MIMEApplication(open('rb').read())
         csv_attachment.add_header('Content-Disposition', 'attachment', filename='dec_21.csv')
         message.attach(csv_attachment)
 
