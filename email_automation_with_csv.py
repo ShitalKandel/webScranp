@@ -5,17 +5,14 @@ from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
 
 sender_email = "lewishacker4@gmail.com"
-
 sender_password = "faixvssubgtmipvk"
 smtp_server = "smtp.gmail.com"
 smtp_port = 587
 
-
 with open('receivers.csv', 'r') as file:
     reader = csv.reader(file)
-    next(reader)  
+    next(reader)
     receivers = [row[0] for row in reader]
-
 
 subject = "Check if this mail is useful."
 body = '''
@@ -25,7 +22,7 @@ Dear sir/mam,
     automation task has been completed.
 '''
 
-def automation(sender_email,sender_password,receivers):
+def automation(sender_email, sender_password, receivers):
     for receiver_email in receivers:
 
         message = MIMEMultipart()
@@ -33,15 +30,14 @@ def automation(sender_email,sender_password,receivers):
         message['To'] = receiver_email
         message['Subject'] = subject
 
-        
-        csv_attachment = MIMEApplication(open('rb').read())
+        # Specify the correct CSV file path
+        csv_attachment = MIMEApplication(open('dec_21.csv', 'rb').read())
         csv_attachment.add_header('Content-Disposition', 'attachment', filename='dec_21.csv')
         message.attach(csv_attachment)
 
         message.attach(MIMEText(body, 'plain'))
 
         try:
-
             with smtplib.SMTP(smtp_server, smtp_port) as server:
                 server.starttls()
                 server.login(sender_email, sender_password)
@@ -53,3 +49,5 @@ def automation(sender_email,sender_password,receivers):
             print(f"An error occurred while sending email to {receiver_email}: {e}")
 
     print("Email sending process completed.")
+
+# automation(sender_email, sender_password, receivers)

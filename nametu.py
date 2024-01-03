@@ -81,19 +81,14 @@ class JobScraper:
 
             if job_detail_url and job_detail_url not in self.processed_urls:
                 job_open, deadline_job = self.get_job_details(job_detail_url)
-
-                if job_open and deadline_job:
-                    values = {
-                        "title": title,
-                        "location": location,
-                        "Posted_On": job_open,
-                        "Deadline": deadline_job,
-                    }
-                    descriptions.append(values)
-                    self.processed_urls = [self.processed_urls.add(job_detail_url)]
-
+                values = {
+                    "title": title,
+                    "location": location,
+                    "Posted_On": job_open,
+                    "Deadline": deadline_job,
+                }
+                descriptions.append(values)
         return descriptions
-
 
 
 class ScrapFile:
@@ -117,6 +112,7 @@ class ScrapFile:
         return [file for file in os.listdir() if file.startswith("job_") and file.endswith(".csv")]
 
     def write_to_csv(self, data, csv_file_path):
+        print(data)
         if not os.path.exists(csv_file_path):
             with open(csv_file_path, "w", newline="", encoding="utf-8") as new_csv_file:
                 fieldnames = ["title", "location", "Posted_On", "Deadline"]
@@ -165,23 +161,23 @@ class JobManager:
 
 
 if __name__ == "__main__":
-    # base_url = "https://www.jobsnepal.com/"
+  
 
     job_scraper = JobScraper(base_url)
     scrap_file_instance = ScrapFile()
 
     scraped_data = job_scraper.scrape_jobs()
     csv_file_path = scrap_file_instance.create_csv_file()
-
+    print(scraped_data)
     scrap_file_instance.write_to_csv(scraped_data, csv_file_path)
 
     existing_data = scrap_file_instance.read_csv(csv_file_path)
     job_manager = JobManager(base_url)
     job_manager.compare_and_update(scraped_data, csv_file_path)
     job_manager.log_job_scraps(scraped_data)
+    
+    email = automation(sender_email, sender_password, receivers)
+   
 
-
-    em = MIMEMultipart()
-    automation(sender_email, sender_password, receivers)
     print("Successfully sent email.")
 
