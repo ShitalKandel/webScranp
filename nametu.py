@@ -1,7 +1,6 @@
 import os
 import csv
 from datetime import datetime
-from email.mime.multipart import MIMEMultipart
 from email_automation_with_csv import automation, sender_email, sender_password, receivers
 from urllib.parse import urljoin
 import requests
@@ -92,92 +91,94 @@ class JobScraper:
 
 
 class ScrapFile:
+   def __init__(self):
+       pass
 
-    """
-    This class creates, compares data on existing csv with the scrap files, write and read to csv file.
-    """
-    def __init__(self):
-        pass
+   def create_csv_file(self):
+       timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+       new_csv_file_path = f"job_{timestamp}.csv"
+       with open(new_csv_file_path, "w", newline="", encoding="utf-8") as new_csv_file:
+           fieldnames = ["title", "location", "Posted_On", "Deadline"]
+           writer = csv.DictWriter(new_csv_file, fieldnames=fieldnames)
+           writer.writeheader()
+       return new_csv_file_path
 
-    def create_csv_file(self):
-        timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
-        new_csv_file_path = f"job_{timestamp}.csv"
-        with open(new_csv_file_path, "w", newline="", encoding="utf-8") as new_csv_file:
-            fieldnames = ["title", "location", "Posted_On", "Deadline"]
-            writer = csv.DictWriter(new_csv_file, fieldnames=fieldnames)
-            writer.writeheader()
-        return new_csv_file_path
+   def write_to_csv(self, data, csv_file_path):
+       with open(csv_file_path, "a", newline="", encoding="utf-8") as csv_file:
+           writer = csv.DictWriter(csv_file, fieldnames=["title", "location", "Posted_On", "Deadline"],extrasaction='ignore')
+           writer.writerows(data)
 
-    def get_existing_csv_files(self):
-        return [file for file in os.listdir() if file.startswith("job_") and file.endswith(".csv")]
+   def get_existing_csv_files(self):
+        return[file for file in os.listdir() if file.startswith("job_") and file.endswith(".csv")]
+    
 
-    def write_to_csv(self, data, csv_file_path):
-        print(data)
-        if not os.path.exists(csv_file_path):
-            with open(csv_file_path, "w", newline="", encoding="utf-8") as new_csv_file:
-                fieldnames = ["title", "location", "Posted_On", "Deadline"]
-                writer = csv.DictWriter(new_csv_file, fieldnames=fieldnames)
-                writer.writeheader()
-
-        existing_data = self.read_csv(csv_file_path)
-
-        unique_data = [entry for entry in data if entry not in existing_data]
-
-        if unique_data:
-            with open(csv_file_path, "a", newline="", encoding="utf-8") as existing_file:
-                writer = csv.DictWriter(existing_file, fieldnames=["title", "location", "Posted_On", "Deadline"])
-                writer.writerows(unique_data)
-
-    def read_csv(self, csv_file_path):
-        existing_data = []
-        if os.path.exists(csv_file_path):
-            with open(csv_file_path, "r", newline="", encoding="utf-8") as existing_file:
-                reader = csv.DictReader(existing_file)
-                existing_data = [row for row in reader]
-        return existing_data
+   def read_csv(self, csv_file_path):
+       try:
+           with open(csv_file_path, "r", newline="", encoding="utf-8") as existing_file:
+               reader = csv.DictReader(existing_file)
+               return [row for row in reader]
+       except FileNotFoundError:
+           print(f"File {csv_file_path} not found.")
+           return []
 
 
 class JobManager:
     def __init__(self, base_url):
         self.base_url = base_url
 
-    def compare_and_update(self, new_data, csv_file_path):
-        existing_data = []
-        if os.path.exists(csv_file_path):
-            with open(csv_file_path, "r", newline="", encoding="utf-8") as existing_file:
-                reader = csv.DictReader(existing_file)
-                existing_data = [row for row in reader]
+    def compare_file(self, new_csv_file_path):
+        job_files = [file for file in os.listdir() if file.startswith("job") and file.endswith(".csv")]
 
-        unique_data = [job for job in new_data if job not in existing_data]
-        if unique_data:
-            with open(csv_file_path, "a", newline="", encoding="utf-8") as existing_file:
-                writer = csv.DictWriter(existing_file, fieldnames=["title", "location", "Posted_On", "Deadline"])
-                writer.writerows(unique_data)
+        with open(new_csv_file_path, "r", newline='') as new_file:
+            new_csv_reader = csv.reader(new_file)
+            import_1 = list(new_csv_reader)
+
+        time = datetime.now().strftime("%Y%m%d%H%M%S")
+        unique_csv_filename = f"unique_{time}.csv"
+
+        with open(unique_csv_filename, 'a', newline='') as unique_csv:
+            unique_csv_writer = csv.writer(unique_csv)
+
+            for job_file in job_files:
+                with open(job_file, "r") as current_file:
+                    job_csv_reader = csv.reader(current_file)
+                    import_2 = list(job_csv_reader)
+
+                    for row in import_2:
+                        if row not in import_1:
+                            unique_csv_writer.writerow(row)
+
+        return unique_csv_filename
 
     def log_job_scraps(self, job_data):
-        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
-        with open("job_scraps_log.txt", "a", encoding="utf-8") as log_file:
-            log_file.write(f"{timestamp}: Scraped {len(job_data)} jobs.\n")
+       timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+       try:
+           with open("job_scraps_log.txt", "a", encoding="utf-8") as log_file:
+               log_file.write(f"{timestamp}: Scraped {len(job_data)} jobs.\n")
+       except IOError:
+           print("Failed to write to log file.")
 
 
 if __name__ == "__main__":
-  
+   base_url = "https://www.jobsnepal.com/"
 
-    job_scraper = JobScraper(base_url)
-    scrap_file_instance = ScrapFile()
+   job_scraper = JobScraper(base_url)
+   scrap_file_instance = ScrapFile()
 
-    scraped_data = job_scraper.scrape_jobs()
-    csv_file_path = scrap_file_instance.create_csv_file()
-    print(scraped_data)
-    scrap_file_instance.write_to_csv(scraped_data, csv_file_path)
+   scraped_data = job_scraper.scrape_jobs()
+   csv_file_path = scrap_file_instance.create_csv_file()
+   print(scraped_data)
+   scrap_file_instance.write_to_csv(scraped_data, csv_file_path)
 
-    existing_data = scrap_file_instance.read_csv(csv_file_path)
-    job_manager = JobManager(base_url)
-    job_manager.compare_and_update(scraped_data, csv_file_path)
-    job_manager.log_job_scraps(scraped_data)
-    
-    email = automation(sender_email, sender_password, receivers)
-   
+   existing_data = scrap_file_instance.read_csv(csv_file_path)
+   job_manager = JobManager(base_url)
+   unique_csv_filename = job_manager.compare_file(csv_file_path)
+   job_manager.log_job_scraps(scraped_data)
 
-    print("Successfully sent email.")
+   new_csv_file_path = scrap_file_instance.create_csv_file()
+   scrap_file_instance.write_to_csv(scrap_file_instance.read_csv(unique_csv_filename), new_csv_file_path)
+
+   email = automation(sender_email, sender_password, receivers, unique_csv_filename, new_csv_file_path)
+
+   print("Successfully sent email.")
 

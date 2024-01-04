@@ -1,13 +1,14 @@
 import smtplib
 import csv
+import os
+from email import encoders
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 from email.mime.application import MIMEApplication
+from email.mime.base import MIMEBase
 
 sender_email = "lewishacker4@gmail.com"
 sender_password = "faixvssubgtmipvk"
-smtp_server = "smtp.gmail.com"
-smtp_port = 587
 
 with open('receivers.csv', 'r') as file:
     reader = csv.reader(file)
@@ -22,32 +23,28 @@ Dear sir/mam,
     automation task has been completed.
 '''
 
-def automation(sender_email, sender_password, receivers):
-    for receiver_email in receivers:
+def automation(sender_email, sender_password, receivers, file_path1, file_path2):
+  msg = MIMEMultipart()
+  msg['From'] = sender_email
+  msg['To'] = ', '.join(receivers)
+  msg['Subject'] = "Job Data Update"
 
-        message = MIMEMultipart()
-        message['From'] = sender_email
-        message['To'] = receiver_email
-        message['Subject'] = subject
+  body = "Attached are the updated job data."
+  msg.attach(MIMEText(body, 'plain'))
 
-        # Specify the correct CSV file path
-        csv_attachment = MIMEApplication(open('dec_21.csv', 'rb').read())
-        csv_attachment.add_header('Content-Disposition', 'attachment', filename='dec_21.csv')
-        message.attach(csv_attachment)
+  # Open the files in binary mode and attach them to the message
+  for file_path in [file_path1, file_path2]:
+      with open(file_path, 'rb') as attachment:
+          part = MIMEBase('application', 'octet-stream')
+          part.set_payload((attachment).read())
 
-        message.attach(MIMEText(body, 'plain'))
+      encoders.encode_base64(part)
+      part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(file_path))
+      msg.attach(part)
 
-        try:
-            with smtplib.SMTP(smtp_server, smtp_port) as server:
-                server.starttls()
-                server.login(sender_email, sender_password)
-                server.sendmail(sender_email, receiver_email, message.as_string())
-            print(f"Email sent successfully to {receiver_email}")
-        except smtplib.SMTPAuthenticationError as e:
-            print(f"Failed to send email to {receiver_email}. Authentication error: {e}")
-        except Exception as e:
-            print(f"An error occurred while sending email to {receiver_email}: {e}")
-
-    print("Email sending process completed.")
-
-# automation(sender_email, sender_password, receivers)
+  server = smtplib.SMTP('smtp.gmail.com', 587)
+  server.starttls()
+  server.login(sender_email, sender_password)
+  text = msg.as_string()
+  server.sendmail(sender_email, receivers, text)
+  server.quit()
