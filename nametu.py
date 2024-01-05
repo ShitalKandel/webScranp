@@ -1,3 +1,4 @@
+
 import os
 import csv
 from datetime import datetime
@@ -90,12 +91,16 @@ class JobScraper:
         return descriptions
 
 
+
 class ScrapFile:
    def __init__(self):
        pass
 
+   def get_existing_csv_files(self):
+        return[file for file in os.listdir() if file.startswith("job_") and file.endswith(".csv")]
+
    def create_csv_file(self):
-       timestamp = datetime.now().strftime("%Y%m%d%H%M%S")
+       timestamp = datetime.now().strftime("%Y%m%d")
        new_csv_file_path = f"job_{timestamp}.csv"
        with open(new_csv_file_path, "w", newline="", encoding="utf-8") as new_csv_file:
            fieldnames = ["title", "location", "Posted_On", "Deadline"]
@@ -105,50 +110,27 @@ class ScrapFile:
 
    def write_to_csv(self, data, csv_file_path):
        with open(csv_file_path, "a", newline="", encoding="utf-8") as csv_file:
-           writer = csv.DictWriter(csv_file, fieldnames=["title", "location", "Posted_On", "Deadline"],extrasaction='ignore')
+           writer = csv.DictWriter(csv_file, fieldnames=["title", "location", "Posted_On", "Deadline"], extrasaction='ignore')
            writer.writerows(data)
 
-   def get_existing_csv_files(self):
-        return[file for file in os.listdir() if file.startswith("job_") and file.endswith(".csv")]
-    
+   def write_unique_data(self, new_csv_file_path, scrap_data):
+        list_files = self.get_existing_csv_files()
+        for timestamp in new_csv_file_path:
+            if timestamp in new_csv_file_path == new_csv_file_path in list_files:
+                with open(csv_file_path,'r',newline="",encoding ="utf-8") as existing_file:
+                    existing_reader = csv.reader(existing_file)
+                    existing_data = list(existing_reader)
 
-   def read_csv(self, csv_file_path):
-       try:
-           with open(csv_file_path, "r", newline="", encoding="utf-8") as existing_file:
-               reader = csv.DictReader(existing_file)
-               return [row for row in reader]
-       except FileNotFoundError:
-           print(f"File {csv_file_path} not found.")
-           return []
+                unique_data = [row for row in scrap_data if row not in existing_data]
+
+                with open(csv_file_path,'a',newline="",encoding ="utf-8") as append_file:
+                    writer = csv.DictWriter(append_file,fieldnames=["title", "location", "Posted_On", "Deadline"],extrasaction="ignore")
+                    writer.writerows(unique_data)
 
 
 class JobManager:
     def __init__(self, base_url):
         self.base_url = base_url
-
-    def compare_file(self, new_csv_file_path):
-        job_files = [file for file in os.listdir() if file.startswith("job") and file.endswith(".csv")]
-
-        with open(new_csv_file_path, "r", newline='') as new_file:
-            new_csv_reader = csv.reader(new_file)
-            import_1 = list(new_csv_reader)
-
-        time = datetime.now().strftime("%Y%m%d%H%M%S")
-        unique_csv_filename = f"unique_{time}.csv"
-
-        with open(unique_csv_filename, 'a', newline='') as unique_csv:
-            unique_csv_writer = csv.writer(unique_csv)
-
-            for job_file in job_files:
-                with open(job_file, "r") as current_file:
-                    job_csv_reader = csv.reader(current_file)
-                    import_2 = list(job_csv_reader)
-
-                    for row in import_2:
-                        if row not in import_1:
-                            unique_csv_writer.writerow(row)
-
-        return unique_csv_filename
 
     def log_job_scraps(self, job_data):
        timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
@@ -167,18 +149,12 @@ if __name__ == "__main__":
 
    scraped_data = job_scraper.scrape_jobs()
    csv_file_path = scrap_file_instance.create_csv_file()
-   print(scraped_data)
-   scrap_file_instance.write_to_csv(scraped_data, csv_file_path)
+   scrap_file_instance.write_to_csv(scraped_data,csv_file_path)
+   store_data = scrap_file_instance.write_unique_data(scraped_data, csv_file_path)
 
-   existing_data = scrap_file_instance.read_csv(csv_file_path)
    job_manager = JobManager(base_url)
-   unique_csv_filename = job_manager.compare_file(csv_file_path)
    job_manager.log_job_scraps(scraped_data)
-
-   new_csv_file_path = scrap_file_instance.create_csv_file()
-   scrap_file_instance.write_to_csv(scrap_file_instance.read_csv(unique_csv_filename), new_csv_file_path)
-
-   email = automation(sender_email, sender_password, receivers, unique_csv_filename, new_csv_file_path)
+   email = automation(sender_email, sender_password, receivers, store_data)
 
    print("Successfully sent email.")
 

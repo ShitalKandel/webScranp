@@ -23,24 +23,26 @@ Dear sir/mam,
     automation task has been completed.
 '''
 
-def automation(sender_email, sender_password, receivers, file_path1, file_path2):
+def automation(sender_email, sender_password, receivers, file_path):
   msg = MIMEMultipart()
   msg['From'] = sender_email
   msg['To'] = ', '.join(receivers)
-  msg['Subject'] = "Job Data Update"
+  msg['Subject'] = "Job Update"
 
-  body = "Attached are the updated job data."
+  body = "Dear sir/mam,\t I hope this job finds you well. Here's the list of job that you can apply for."
   msg.attach(MIMEText(body, 'plain'))
+  
+  if file_path is not None and os.path.exists(file_path):
+    with open(file_path, 'rb') as attachment:
+        part = MIMEBase('application', 'octet-stream')
+        part.set_payload(attachment.read())
 
-  # Open the files in binary mode and attach them to the message
-  for file_path in [file_path1, file_path2]:
-      with open(file_path, 'rb') as attachment:
-          part = MIMEBase('application', 'octet-stream')
-          part.set_payload((attachment).read())
+        encoders.encode_base64(part)
+        part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(file_path))
+        msg.attach(part)
+  else:
+        print(f"Invalid file path: {file_path}")
 
-      encoders.encode_base64(part)
-      part.add_header('Content-Disposition', 'attachment', filename=os.path.basename(file_path))
-      msg.attach(part)
 
   server = smtplib.SMTP('smtp.gmail.com', 587)
   server.starttls()
