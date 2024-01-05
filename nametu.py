@@ -122,7 +122,7 @@ class ScrapFile:
                     existing_data = list(existing_reader)
 
                 unique_data = [row for row in scrap_data if row not in existing_data]
-
+                print(unique_data)
                 with open(csv_file_path,'a',newline="",encoding ="utf-8") as append_file:
                     writer = csv.DictWriter(append_file,fieldnames=["title", "location", "Posted_On", "Deadline"],extrasaction="ignore")
                     writer.writerows(unique_data)
@@ -154,7 +154,7 @@ if __name__ == "__main__":
 
    job_manager = JobManager(base_url)
    job_manager.log_job_scraps(scraped_data)
-   email = automation(sender_email, sender_password, receivers, store_data)
+   email = automation(sender_email, sender_password, receivers, csv_file_path)
 
    print("Successfully sent email.")
 

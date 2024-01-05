@@ -42,6 +42,7 @@ def automation(sender_email, sender_password, receivers, file_path):
         msg.attach(part)
   else:
         print(f"Invalid file path: {file_path}")
+        return
 
 
   server = smtplib.SMTP('smtp.gmail.com', 587)
