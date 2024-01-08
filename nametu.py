@@ -2,6 +2,8 @@
 import os
 import csv
 from datetime import datetime
+import random
+import time
 from email_automation_with_csv import automation, sender_email, sender_password, receivers
 from urllib.parse import urljoin
 import requests
@@ -37,7 +39,8 @@ class JobScraper:
             location_text = [location.text.strip() for location in location_tags]
 
             div_tags = soup.find_all("div", class_="col-sm-6 col-md-6 col-lg-4 mb-3")
-            links = [urljoin(self.base_url, div.find("a")["href"]) if div.find("a") else None for div in div_tags]
+            links = [urljoin(self.base_url, div.find("h2", class_='job-title').a['href'])
+                    for div in div_tags]
 
             return title_text, location_text, links
         else:
@@ -45,7 +48,8 @@ class JobScraper:
             return None, None, None
 
     def get_job_details(self, job_url):
-        job_resp = requests.get(job_url)
+        time.sleep(random.randint(5,20))
+        job_resp = requests.get(job_url,headers=headers)
         if job_resp.status_code == 200:
             job_soup = BeautifulSoup(job_resp.text, "html.parser")
 
